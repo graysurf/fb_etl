@@ -1,0 +1,65 @@
+# license
+curl -XPUT  'http://localhost:9200/_xpack/license?acknowledge=true' -d '{"license":{"uid":"f0dddd84-41bf-48bb-a667-ca4c6c462813","type":"basic","issue_date_in_millis":1504569600000,"expiry_date_in_millis":1536191999999,"max_nodes":100,"issued_to":"Terry Lin (EITC)","issuer":"Web Form","signature":"AAAAAwAAAA3Xn+928S7x+z20/rBgAAABmC9ZN0hjZDBGYnVyRXpCOW5Bb3FjZDAxOWpSbTVoMVZwUzRxVk1PSmkxaktJRVl5MUYvUWh3bHZVUTllbXNPbzBUemtnbWpBbmlWRmRZb25KNFlBR2x0TXc2K2p1Y1VtMG1UQU9TRGZVSGRwaEJGUjE3bXd3LzRqZ05iLzRteWFNekdxRGpIYlFwYkJiNUs0U1hTVlJKNVlXekMrSlVUdFIvV0FNeWdOYnlESDc3MWhlY3hSQmdKSjJ2ZTcvYlBFOHhPQlV3ZHdDQ0tHcG5uOElCaDJ4K1hob29xSG85N0kvTWV3THhlQk9NL01VMFRjNDZpZEVXeUtUMXIyMlIveFpJUkk2WUdveEZaME9XWitGUi9WNTZVQW1FMG1DenhZU0ZmeXlZakVEMjZFT2NvOWxpZGlqVmlHNC8rWVVUYzMwRGVySHpIdURzKzFiRDl4TmM1TUp2VTBOUlJZUlAyV0ZVL2kvVk10L0NsbXNFYVZwT3NSU082dFNNa2prQ0ZsclZ4NTltbU1CVE5lR09Bck93V2J1Y3c9PQAAAQBLoq9wAqZ65lF+nQhtrNUkOZ2x6DrnfIwYAYjUieTix54fcGCNsjtyJH4vsrmzSjbk4lf4K1BmUEAQRD39wPfkardeNI+BgRkBIafQczUqnfEIj/fSqKYNOpbplC2Mj9cq1y4X9RLmD7X0+gF6PUlaHLSBN9ymuCdR+crtx4io/Nf32crFrkRMUI5gud9Wm33OvvDtSmYmH4AWB5kQHUk5u+VLqVDVrHXtnHdzSxR9MOeI1fDEfX2vmlzhOnnczvrWurHaTJsV6oMTUvGtfMGaZgPTbh57bzpj5B8TOcJsCPNQhmpHc+1pKOurFJyWRgdK/EM8EIwn5n2ca/3BmH/b","start_date_in_millis":1504569600000}}'
+
+# hdd
+# index.merge.scheduler.max_thread_count: 1
+PUT /*/_settings
+{
+  "index.merge.scheduler.max_thread_count" : 1
+}
+
+
+PUT /_cluster/settings
+{
+    "persistent" : {
+        "indices.store.throttle.type" : "none"
+    }
+}
+
+PUT /onlinecrm-like-170913/
+{
+  "settings" : {
+        "index" : {
+            "number_of_shards" : 18,
+            "number_of_replicas" : 0,
+            "refresh_interval" : "-1",
+            "translog.durability": "async",
+            "translog.flush_threshold_size": "1024mb",
+            "merge.scheduler.max_thread_count" : 1
+        }
+   }
+}
+
+
+
+curl -XPUT 'http://localhost:9200/_all/_settings?preserve_existing=true' -d '{
+  "index.merge.scheduler.max_thread_count" : "1",
+  "index.number_of_shards" : "18",
+  "index.translog.durability" : "async",
+  "index.translog.flush_threshold_size" : "1024mb"
+}'
+
+
+PUT /_cluster/settings
+{
+  "persistent": {
+    "cluster.routing.allocation.enable":"none",
+    "cluster.routing.rebalance.enable":"none",
+    "cluster.routing.allocation.allow_rebalance":"indices_all_active"
+  }
+}
+
+
+POST /_cluster/reroute
+{
+  "commands": [
+    {
+      "allocate_stale_primary": {
+        "index": "yen-cookie-170913",
+        "shard": 2,
+        "node": "es-cluster-1k6f",
+        "accept_data_loss": true
+      }
+    }
+  ]
+}
